@@ -110,6 +110,9 @@ celerybeat.pid
 .venv
 env/
 venv/
+
+# Configuration
+config.yaml
 ENV/
 env.bak/
 venv.bak/

@@ -1,0 +1,28 @@
+# Default configuration for the presentation generator
+# Copy this file to config.yaml and edit it to your needs.
+
+# LLM Provider Configuration
+llm:
+  provider: "gemini"  # gemini, ollama, openai, anthropic
+  model: "gemini-2.5-flash"
+  api_key: null  # Set your API key here if required by the provider
+  base_url: null  # For Ollama and other local providers
+  temperature: 0.7
+  max_tokens: 2048
+  timeout: 30.0
+
+# Generation Parameters
+generation:
+  max_sub_subjects: 8
+  min_sub_subjects: 3
+  slide_text_max_length: 500
+  script_min_length: 200
+
+# Retry and Rate Limiting
+retry:
+  max_retries: 3
+  rate_limit_delay: 1.0
+
+# Output Configuration
+output:
+  directory: "./output"

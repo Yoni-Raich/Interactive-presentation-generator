@@ -98,9 +98,12 @@ def cli(ctx, version):
               help='Output file path (default: auto-generated in output directory)')
 @click.option('--verbose', '-v', is_flag=True, 
               help='Enable verbose output with detailed progress')
+@click.option('--config', 'config_path',
+              type=click.Path(exists=True),
+              help='Path to a custom YAML configuration file.')
 @click.option('--config-check', is_flag=True,
               help='Check configuration and exit')
-def generate(subject: Optional[str], output: Optional[str], verbose: bool, config_check: bool):
+def generate(subject: Optional[str], output: Optional[str], verbose: bool, config_path: Optional[str], config_check: bool):
     """
     Generate a presentation from a subject.
     
@@ -117,16 +120,21 @@ def generate(subject: Optional[str], output: Optional[str], verbose: bool, confi
         # Generate with custom output file
         python -m src.main generate "AI Ethics" --output my_presentation.json
         
+        # Generate with custom config file
+        python -m src.main generate "Climate Change" --config my_config.yaml
+
         # Generate with verbose progress
         python -m src.main generate "Climate Change" --verbose
     """
     try:
         # Load and validate configuration
         click.echo("🔧 Loading configuration...")
-        config = load_config()
+        config = load_config(config_path)
         
         if config_check:
             click.echo("✅ Configuration is valid!")
+            if config.config_file:
+                click.echo(f"   Config file: {config.config_file}")
             click.echo(f"   Provider: {config.llm_provider}")
             click.echo(f"   Model: {config.llm_model}")
             click.echo(f"   Output directory: {config.output_directory}")
@@ -305,12 +313,20 @@ def view(file_path: str, output_format: str):
 
 
 @cli.command()
-def config():
+@click.option('--config', 'config_path',
+              type=click.Path(exists=True),
+              help='Path to a custom YAML configuration file.')
+def config(config_path: Optional[str]):
     """Show current configuration and environment setup."""
     try:
-        config = load_config()
+        config = load_config(config_path)
         
         click.echo("🔧 Current Configuration:")
+        if config.config_file:
+            click.echo(f"   Config file: {config.config_file}")
+        else:
+            click.echo("   Config file: Not used (defaults and env vars only)")
+
         click.echo(f"   Provider: {config.llm_provider}")
         click.echo(f"   Model: {config.llm_model}")
         click.echo(f"   Temperature: {config.llm_temperature}")
