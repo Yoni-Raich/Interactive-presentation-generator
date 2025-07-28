@@ -179,8 +179,7 @@ python -m src.main view presentation.json --format json
 │   │   ├── input_handler.py     # Input validation and sanitization
 │   │   └── json_serializer.py   # JSON output handling
 │   ├── integrations/            # LLM provider integrations
-│   │   ├── llm_providers.py     # Provider abstraction layer
-│   │   ├── llm_integration.py   # Unified LLM client
+│   │   ├── llm_client.py        # Unified LLM client (all providers)
 │   │   └── langchain_integration.py # Legacy compatibility
 │   ├── prompts/                 # AI prompts and templates
 │   ├── utils/                   # Utilities and configuration

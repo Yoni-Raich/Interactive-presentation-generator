@@ -68,7 +68,7 @@ class Config:
         elif llm_provider == "ollama":
             # Ollama defaults
             if not llm_model:
-                llm_model = "llama3.2"
+                llm_model = "gemma3"
             if not llm_base_url:
                 llm_base_url = "http://localhost:11434"
         elif llm_provider == "openai":

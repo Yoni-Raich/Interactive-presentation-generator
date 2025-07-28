@@ -418,7 +418,7 @@ def setup(provider: Optional[str], list_providers: bool):
         # Get setup instructions for OpenAI
         python -m src.main setup --provider openai
     """
-    from src.integrations.llm_providers import LLMProviderFactory, LLMProvider
+    from src.integrations.llm_client import LLMProviderFactory, LLMProvider
     
     if list_providers:
         click.echo("🔧 Supported LLM Providers:")
@@ -513,7 +513,7 @@ def test_providers():
     This command attempts to connect to and test all available
     LLM providers based on your current configuration.
     """
-    from src.integrations.llm_providers import LLMProviderFactory, LLMProvider, LLMConfig
+    from src.integrations.llm_client import LLMProviderFactory, LLMProvider, LLMConfig
     
     click.echo("🧪 Testing LLM Provider Connections")
     click.echo()
