@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 from ..models.data_models import SlideData, PresentationData
 from ..integrations.langchain_integration import LLMClient
+from ..integrations.tts_client import TTSClient
 from ..utils.config import Config
 from ..utils.logger import get_logger
 from ..utils.exceptions import (
@@ -67,16 +68,18 @@ class ContentGenerator:
     4. Handle errors and provide progress feedback
     """
     
-    def __init__(self, llm_client: LLMClient, config: Config):
+    def __init__(self, llm_client: LLMClient, config: Config, tts_client: TTSClient = None):
         """
         Initialize the content generator.
         
         Args:
             llm_client: Initialized LLM client (supports multiple providers)
             config: Configuration object
+            tts_client: Initialized TTS client
         """
         self.llm_client = llm_client
         self.config = config
+        self.tts_client = tts_client
         self.progress_callback: Optional[Callable[[GenerationProgress], None]] = None
         self._current_progress: Optional[GenerationProgress] = None
         
@@ -150,6 +153,13 @@ class ContentGenerator:
             self._update_progress()
             
             slides = self._generate_slides_with_scripts(sub_subjects, subject)
+
+            if self.tts_client:
+                logger.info("=== STEP 3: Audio Generation ===")
+                self._current_progress.current_step = "Generating audio for slides"
+                self._update_progress()
+                for i, slide in enumerate(slides):
+                    self._generate_audio_for_slide(slide, i)
             
             self._current_progress.completed_steps = 3
             self._update_progress()
@@ -825,6 +835,27 @@ Understanding {sub_subject} provides valuable insights that enhance our overall 
             except Exception as e:
                 logger.warning(f"Progress callback failed: {e}")
     
+    def _generate_audio_for_slide(self, slide: SlideData, slide_index: int):
+        """
+        Generates audio for a single slide.
+
+        Args:
+            slide: The slide data.
+            slide_index: The index of the slide.
+        """
+        if not self.tts_client:
+            return
+
+        try:
+            audio_dir = "audio_files"
+            if not os.path.exists(audio_dir):
+                os.makedirs(audio_dir)
+
+            file_path = os.path.join(audio_dir, f"slide_{slide_index}")
+            self.tts_client.generate_audio(slide.talking_script, file_path)
+        except Exception as e:
+            logger.error(f"Error generating audio for slide {slide_index}: {e}")
+
     def get_current_progress(self) -> Optional[GenerationProgress]:
         """Get the current generation progress."""
         return self._current_progress
