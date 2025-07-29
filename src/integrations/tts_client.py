@@ -77,7 +77,7 @@ class TTSClient:
                         data_buffer = self._convert_to_wav(inline_data.data, inline_data.mime_type)
                     self._save_binary_file(f"{file_name}{file_extension}", data_buffer)
                 else:
-                    print(chunk.text)
+                    self.logger.info(chunk.text)
         except Exception as e:
             raise TTSGenerationError(f"Error generating audio: {e}")
 
