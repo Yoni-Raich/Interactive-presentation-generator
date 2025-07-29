@@ -84,7 +84,7 @@ class TTSClient:
     def _save_binary_file(self, file_name, data):
         with open(file_name, "wb") as f:
             f.write(data)
-        print(f"File saved to to: {file_name}")
+        print(f"File saved to: {file_name}")
 
     def _convert_to_wav(self, audio_data: bytes, mime_type: str) -> bytes:
         parameters = self._parse_audio_mime_type(mime_type)
