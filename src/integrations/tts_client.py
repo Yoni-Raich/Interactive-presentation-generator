@@ -3,10 +3,21 @@ import mimetypes
 import os
 import re
 import struct
+import sys
+from pathlib import Path
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
+
+# Add the project root to the Python path for imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Load environment variables
+load_dotenv()
 
 from src.utils.exceptions import TTSGenerationError
+from src.utils.logger import get_logger
 
 class TTSClient:
     """A client for generating audio from text using the Google Generative AI API."""
@@ -19,10 +30,11 @@ class TTSClient:
             api_key: The API key for the Google Generative AI API. If not provided,
                 it will be read from the GEMINI_API_KEY environment variable.
         """
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not self.api_key:
-            raise TTSGenerationError("GEMINI_API_KEY not provided.")
+            raise TTSGenerationError("GEMINI_API_KEY or GOOGLE_API_KEY not provided.")
         self.client = genai.Client(api_key=self.api_key)
+        self.logger = get_logger(__name__)
 
     def generate_audio(self, text: str, file_path: str):
         """
@@ -135,3 +147,8 @@ class TTSClient:
                     pass
 
         return {"bits_per_sample": bits_per_sample, "rate": rate}
+
+if __name__ == '__main__':
+    tts_client = TTSClient()
+    tts = "היי זה בדיקה ראשונית!"
+    tts_client.generate_audio(tts, "output")
