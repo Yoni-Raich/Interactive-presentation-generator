@@ -47,18 +47,13 @@ class PresentationGenerator:
         Args:
             config: Configuration object (uses defaults if None)
             
-        Raises:
-            ConfigurationError: If configuration is invalid
+        Note:
+            Configuration validation is deferred until generation time to allow
+            for basic initialization and configuration inspection.
         """
         self.config = config or Config()
         
-        # Validate configuration for generation
-        try:
-            self.config.validate_for_generation()
-        except Exception as e:
-            raise ConfigurationError(f"Invalid configuration: {e}")
-        
-        # Initialize components
+        # Initialize components (will be created on demand)
         self._provider = None
         self._content_generator = None
         self._image_processor = None

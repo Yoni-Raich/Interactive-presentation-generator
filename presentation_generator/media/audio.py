@@ -40,22 +40,27 @@ class AudioProcessor:
             MediaProcessingError: If API key is not provided
         """
         self.config = config
+        self.client = None
+        self.model = "gemini-2.5-flash-preview-tts"
         
         # Get API key from config or environment
-        api_key = (
+        self.api_key = (
             getattr(config, 'gemini_api_key', None) or
+            getattr(config, 'api_key', None) or
             os.environ.get("GEMINI_API_KEY") or
             os.environ.get("GOOGLE_API_KEY")
         )
         
-        if not api_key:
+        if not self.api_key:
             raise MediaProcessingError(
                 "Gemini API key not provided. Set GEMINI_API_KEY environment variable "
                 "or provide it in the configuration."
             )
-        
-        self.client = genai.Client(api_key=api_key)
-        self.model = "gemini-2.5-flash-preview-tts"
+    
+    def _initialize_client(self):
+        """Initialize the Gemini client lazily."""
+        if self.client is None:
+            self.client = genai.Client(api_key=self.api_key)
     
     def generate_audio(self, script: str, output_path: str) -> float:
         """
@@ -133,6 +138,9 @@ class AudioProcessor:
             MediaProcessingError: If TTS generation fails
         """
         try:
+            # Initialize client if needed
+            self._initialize_client()
+            
             contents = [
                 types.Content(
                     role="user",
