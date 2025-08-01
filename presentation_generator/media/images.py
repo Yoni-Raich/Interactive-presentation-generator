@@ -46,6 +46,35 @@ class ImageProcessor:
             'task_list'
         ]
     
+    def generate_image(self, slide: Slide, output_path: str) -> None:
+        """
+        Generate image for a single slide.
+        
+        Args:
+            slide: Slide object to generate image for
+            output_path: Full path where to save the image
+            
+        Raises:
+            MediaProcessingError: If image generation fails
+        """
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                
+                # Convert slide content to HTML
+                html_content = self._convert_to_html(slide.content, 1)
+                
+                # Render HTML to PNG
+                self._render_to_png(browser, html_content, output_path)
+                
+                browser.close()
+                
+        except Exception as e:
+            raise MediaProcessingError(f"Image generation failed: {e}")
+    
     def process_slides(self, slides: List[Slide], output_dir: Path) -> None:
         """
         Process all slides to generate images and populate image_path.

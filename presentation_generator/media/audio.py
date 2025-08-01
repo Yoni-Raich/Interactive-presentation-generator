@@ -57,6 +57,32 @@ class AudioProcessor:
         self.client = genai.Client(api_key=api_key)
         self.model = "gemini-2.5-flash-preview-tts"
     
+    def generate_audio(self, script: str, output_path: str) -> float:
+        """
+        Generate audio for a single script.
+        
+        Args:
+            script: Text script to convert to audio
+            output_path: Full path where to save the audio file
+            
+        Returns:
+            Duration of the generated audio in seconds
+            
+        Raises:
+            MediaProcessingError: If audio generation fails
+        """
+        if not script or not script.strip():
+            raise MediaProcessingError("Script cannot be empty")
+        
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Generate audio file
+        self._generate_audio(script, output_path)
+        
+        # Calculate and return duration
+        return self._calculate_duration(output_path)
+    
     def process_slides(self, slides: List[Slide], output_dir: Path) -> None:
         """
         Process all slides to generate audio and populate audio_path and duration.

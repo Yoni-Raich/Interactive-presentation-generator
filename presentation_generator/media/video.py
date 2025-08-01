@@ -36,6 +36,50 @@ class VideoProcessor:
         self.fps = config.video_fps
         self.resolution = f"{config.image_width}:{config.image_height}"
     
+    def assemble_video(self, presentation: Presentation, output_path: str) -> None:
+        """
+        Assemble final video from presentation slides.
+        
+        Args:
+            presentation: Presentation object with slides containing image and audio paths
+            output_path: Full path where to save the final video
+            
+        Raises:
+            MediaProcessingError: If video assembly fails
+        """
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Get the working directory from presentation metadata
+        work_dir = Path(presentation.metadata.get('work_dir', output_path.parent))
+        
+        try:
+            # Validate slides have required media files
+            valid_slides = self._validate_slides(presentation.slides, work_dir)
+            
+            if not valid_slides:
+                raise MediaProcessingError("No valid slides with both image and audio found")
+            
+            # Create video segments for each slide
+            temp_videos = []
+            
+            for i, slide in enumerate(valid_slides):
+                temp_video = self._create_slide_video(slide, work_dir, i)
+                if temp_video:
+                    temp_videos.append(temp_video)
+            
+            if not temp_videos:
+                raise MediaProcessingError("No video segments created")
+            
+            # Combine all segments into final video
+            self._combine_videos(temp_videos, output_path)
+            
+            # Clean up temporary files
+            self._cleanup_temp_files(temp_videos)
+            
+        except Exception as e:
+            raise MediaProcessingError(f"Video assembly failed: {e}")
+    
     def process_presentation(self, presentation: Presentation, output_dir: Path) -> None:
         """
         Process presentation to create final video and populate video_path.

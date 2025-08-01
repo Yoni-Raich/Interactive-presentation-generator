@@ -6,8 +6,20 @@ including content generation, workflow management, and orchestration.
 """
 
 from .content import ContentGenerator, GenerationProgress
+from .workflow import (
+    WorkflowManager,
+    WorkflowStep,
+    StepResult,
+    WorkflowProgress,
+    ResourceManager
+)
 
 __all__ = [
     'ContentGenerator',
-    'GenerationProgress'
+    'GenerationProgress',
+    'WorkflowManager',
+    'WorkflowStep',
+    'StepResult',
+    'WorkflowProgress',
+    'ResourceManager'
 ]
