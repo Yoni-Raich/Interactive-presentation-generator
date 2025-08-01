@@ -7,6 +7,7 @@ A powerful AI-powered presentation generator that creates structured presentatio
 - **Multi-Provider LLM Support**: Choose from Gemini, Ollama, OpenAI, or Anthropic
 - **Intelligent Content Generation**: Automatically breaks down topics into logical sub-subjects
 - **Comprehensive Output**: Generates both slide content and detailed talking scripts
+- **Text-to-Speech Integration**: Convert talking scripts to audio files using Google TTS
 - **Local & Cloud Options**: Use free local models (Ollama) or cloud-based services
 - **Progress Tracking**: Real-time progress updates during generation
 - **Error Recovery**: Robust error handling with retry mechanisms
@@ -138,6 +139,30 @@ python -m src.main view presentation.json --format detailed
 # View raw JSON
 python -m src.main view presentation.json --format json
 ```
+
+### 🎵 Generating Audio from Presentations
+
+Convert talking scripts to audio files using Google's TTS service:
+
+```bash
+# Generate audio for single presentation
+python -m src.main generate-audio presentation.json
+
+# Generate audio for multiple presentations
+python -m src.main generate-audio presentation1.json presentation2.json
+
+# Generate with custom output directory
+python -m src.main generate-audio presentation.json --output-dir ./audio_files
+
+# Generate with verbose output
+python -m src.main generate-audio presentation.json --verbose
+```
+
+**Requirements for TTS:**
+- Google API key (GEMINI_API_KEY or GOOGLE_API_KEY in .env)
+- The command creates an `audio/` subdirectory with WAV files
+- Updates the JSON file with audio paths for each slide
+- Generates a new file with `_with_audio.json` suffix
 
 ## 🔧 Setting Up Ollama (Local AI)
 

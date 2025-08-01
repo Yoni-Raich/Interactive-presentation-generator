@@ -28,8 +28,8 @@ class Config:
     gemini_model: Optional[str] = None
     
     # Generation Parameters
-    max_sub_subjects: int = 8
-    min_sub_subjects: int = 3
+    max_sub_subjects: int = 3
+    min_sub_subjects: int = 1
     slide_text_max_length: int = 500
     script_min_length: int = 200
     

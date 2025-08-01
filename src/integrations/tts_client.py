@@ -1,4 +1,5 @@
 import base64
+import json
 import mimetypes
 import os
 import re
@@ -147,6 +148,109 @@ class TTSClient:
                     pass
 
         return {"bits_per_sample": bits_per_sample, "rate": rate}
+
+    def process_presentation_json(self, json_file_path: str, output_dir: str = None) -> str:
+        """
+        Processes a presentation JSON file and generates audio files for all talking scripts.
+        
+        Args:
+            json_file_path: Path to the presentation JSON file
+            output_dir: Directory to save audio files (optional, defaults to same directory as JSON)
+            
+        Returns:
+            str: Path to the updated JSON file with audio paths
+            
+        Raises:
+            TTSGenerationError: If there's an error processing the JSON or generating audio
+        """
+        try:
+            # Read the JSON file
+            with open(json_file_path, 'r', encoding='utf-8') as f:
+                presentation_data = json.load(f)
+            
+            # Set output directory
+            if output_dir is None:
+                output_dir = os.path.dirname(json_file_path)
+            
+            # Create audio subdirectory
+            audio_dir = os.path.join(output_dir, "audio")
+            os.makedirs(audio_dir, exist_ok=True)
+            
+            # Process each slide
+            for i, slide in enumerate(presentation_data.get("slides", [])):
+                talking_script = slide.get("talking_script", "")
+                
+                if talking_script.strip():
+                    # Generate unique filename for this slide
+                    safe_subject = re.sub(r'[^\w\s-]', '', slide.get("sub_subject", f"slide_{i}"))
+                    safe_subject = re.sub(r'[-\s]+', '_', safe_subject)
+                    audio_filename = f"slide_{i:02d}_{safe_subject}"
+                    audio_path = os.path.join(audio_dir, audio_filename)
+                    
+                    self.logger.info(f"Generating audio for slide {i+1}: {slide.get('sub_subject', 'Unknown')}")
+                    
+                    # Generate audio file
+                    self.generate_audio(talking_script, audio_path)
+                    
+                    # Find the generated audio file (it might have _0.wav suffix)
+                    generated_files = []
+                    for file in os.listdir(audio_dir):
+                        if file.startswith(os.path.basename(audio_filename)):
+                            generated_files.append(os.path.join(audio_dir, file))
+                    
+                    if generated_files:
+                        # Use the first generated file (usually there's only one)
+                        relative_audio_path = os.path.relpath(generated_files[0], output_dir)
+                        slide["audio_path"] = relative_audio_path
+                        self.logger.info(f"Audio saved: {relative_audio_path}")
+                    else:
+                        self.logger.warning(f"No audio file generated for slide {i+1}")
+                else:
+                    self.logger.warning(f"No talking script found for slide {i+1}")
+            
+            # Save updated JSON
+            updated_json_path = json_file_path.replace('.json', '_with_audio.json')
+            with open(updated_json_path, 'w', encoding='utf-8') as f:
+                json.dump(presentation_data, f, ensure_ascii=False, indent=2)
+            
+            self.logger.info(f"Updated presentation saved to: {updated_json_path}")
+            return updated_json_path
+            
+        except FileNotFoundError:
+            raise TTSGenerationError(f"JSON file not found: {json_file_path}")
+        except json.JSONDecodeError as e:
+            raise TTSGenerationError(f"Invalid JSON format: {e}")
+        except Exception as e:
+            raise TTSGenerationError(f"Error processing presentation JSON: {e}")
+
+    def process_multiple_presentations(self, json_files: list, output_dir: str = None) -> list:
+        """
+        Processes multiple presentation JSON files and generates audio for all.
+        
+        Args:
+            json_files: List of paths to presentation JSON files
+            output_dir: Directory to save audio files (optional)
+            
+        Returns:
+            list: List of paths to updated JSON files with audio paths
+            
+        Raises:
+            TTSGenerationError: If there's an error processing any JSON file
+        """
+        updated_files = []
+        
+        for i, json_file in enumerate(json_files, 1):
+            try:
+                self.logger.info(f"Processing file {i}/{len(json_files)}: {json_file}")
+                updated_file = self.process_presentation_json(json_file, output_dir)
+                updated_files.append(updated_file)
+                
+            except Exception as e:
+                self.logger.error(f"Failed to process {json_file}: {e}")
+                # Continue with other files instead of stopping
+                continue
+        
+        return updated_files
 
 if __name__ == '__main__':
     tts_client = TTSClient()
