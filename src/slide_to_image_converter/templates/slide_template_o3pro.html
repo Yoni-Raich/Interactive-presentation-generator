@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide {{ slide_number }}</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .slide-container {
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px;
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .slide-content {
+            flex: 1;
+            padding: 50px 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 15px;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #1e88e5;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #0d47a1;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 1.2rem;
+            text-align: center;
+        }
+
+        p {
+            font-size: 1.4rem;
+            color: #424242;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin-bottom: 2rem;
+            padding-left: 0;
+        }
+
+        li {
+            font-size: 1.3rem;
+            color: #424242;
+            margin-bottom: 1rem;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        ul li::before {
+            content: "•";
+            color: #1e88e5;
+            font-size: 1rem;
+            position: absolute;
+            left: -1.5rem;
+        }
+
+        ol {
+            counter-reset: item;
+        }
+
+        ol li {
+            counter-increment: item;
+            position: relative;
+        }
+
+        ol li::before {
+            content: counter(item) ".";
+            color: #1e88e5;
+            font-weight: 600;
+            position: absolute;
+            left: -2rem;
+        }
+
+        /* Blockquotes */
+        blockquote {
+            border-left: 4px solid #1e88e5;
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            font-style: italic;
+            color: #616161;
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 5px;
+        }
+
+        /* Links */
+        a {
+            color: #1e88e5;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #0d47a1;
+        }
+
+        /* Slide footer */
+        .slide-footer {
+            background: #2196f3;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .slide-number {
+            font-size: 1.2rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .slide-content {
+                padding: 40px 50px;
+            }
+            
+            .slide-footer {
+                padding: 15px 30px;
+            }
+            
+            h1 {
+                font-size: 3rem;
+            }
+            
+            h2 {
+                font-size: 2.2rem;
+            }
+            
+            h3 {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .slide-container {
+                min-height: 600px;
+            }
+            
+            .slide-content {
+                padding: 30px 40px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            h2 {
+                font-size: 2rem;
+            }
+            
+            h3 {
+                font-size: 1.6rem;
+            }
+            
+            p, li {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .slide-content {
+                padding: 20px 30px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.6rem;
+            }
+            
+            h3 {
+                font-size: 1.4rem;
+            }
+            
+            p, li {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="slide-content">
+            {{ content|safe }}
+        </div>
+        <div class="slide-footer">
+            <span class="slide-number">Slide {{ slide_number }}</span>
+        </div>
+    </div>
+</body>
+</html>

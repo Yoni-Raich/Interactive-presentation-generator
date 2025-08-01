@@ -1,18 +1,16 @@
-# Interactive Presentation Generator
+# Presentation Generator Library
 
-A powerful AI-powered presentation generator that creates structured presentations with slides and narration scripts from any subject using multiple LLM providers.
+A clean Python library for generating complete video presentations from topics using AI. Transforms any topic into a structured presentation with slides, images, audio narration, and final video output.
 
 ## 🚀 Features
 
+- **Complete Workflow**: Topic → Content → Slides → Images → Audio → Video
 - **Multi-Provider LLM Support**: Choose from Gemini, Ollama, OpenAI, or Anthropic
-- **Intelligent Content Generation**: Automatically breaks down topics into logical sub-subjects
-- **Comprehensive Output**: Generates both slide content and detailed talking scripts
-- **Text-to-Speech Integration**: Convert talking scripts to audio files using Google TTS
-- **Local & Cloud Options**: Use free local models (Ollama) or cloud-based services
-- **Progress Tracking**: Real-time progress updates during generation
+- **Intelligent Content Generation**: Automatically breaks down topics into logical slides
+- **Media Processing**: Generates slide images, TTS audio, and assembles final video
+- **Simple API**: Clean Python library interface with minimal configuration
 - **Error Recovery**: Robust error handling with retry mechanisms
-- **CLI Interface**: Easy-to-use command-line interface
-- **JSON Export**: Structured output for easy integration
+- **Resource Management**: Automatic cleanup of temporary files
 
 ## 🛠️ Supported LLM Providers
 
@@ -25,35 +23,19 @@ A powerful AI-powered presentation generator that creates structured presentatio
 
 ## 📦 Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd interactive-presentation-generator
-   ```
+```bash
+pip install presentation-generator
+```
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure your environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your preferred provider settings
-   ```
-
-## ⚙️ Configuration
-
-### Quick Setup Commands
+Or for development:
 
 ```bash
-# List all available providers
-python -m src.main setup --list-providers
-
-# Get setup instructions for a specific provider
-python -m src.main setup --provider ollama
-python -m src.main setup --provider openai
+git clone <repository-url>
+cd presentation-generator
+pip install -e .
 ```
+
+## ⚙️ Configuration
 
 ### Environment Variables
 
@@ -100,158 +82,92 @@ SCRIPT_MIN_LENGTH=200        # Minimum script length
 
 ### Basic Usage
 
-```bash
-# Interactive mode
-python -m src.main generate
+```python
+from presentation_generator import PresentationGenerator
 
-# Direct subject input
-python -m src.main generate "Machine Learning Basics"
+# Simple usage - generates complete video presentation
+generator = PresentationGenerator()
+presentation = generator.generate("Machine Learning Basics")
+print(f"Video created: {presentation.video_path}")
 
-# With custom output file
-python -m src.main generate "AI Ethics" --output my_presentation.json
-
-# Verbose mode with detailed progress
-python -m src.main generate "Climate Change" --verbose
+# Access individual slide data
+for slide in presentation.slides:
+    print(f"Slide: {slide.title}")
+    print(f"Image: {slide.image_path}")
+    print(f"Audio: {slide.audio_path}")
+    print(f"Duration: {slide.duration}s")
 ```
 
-### Configuration Management
+### Advanced Configuration
 
-```bash
-# Check current configuration
-python -m src.main config
+```python
+from presentation_generator import PresentationGenerator, Config
 
-# Test provider connection
-python -m src.main test-providers
+# Configure with specific provider and settings
+config = Config(
+    llm_provider="gemini",
+    api_key="your-key",
+    output_dir="./presentations"
+)
 
-# Validate configuration
-python -m src.main generate --config-check
+generator = PresentationGenerator(config)
+presentation = generator.generate("AI Ethics")
 ```
-
-### Viewing Generated Presentations
-
-```bash
-# View presentation summary
-python -m src.main view presentation.json
-
-# View detailed content
-python -m src.main view presentation.json --format detailed
-
-# View raw JSON
-python -m src.main view presentation.json --format json
-```
-
-### 🎵 Generating Audio from Presentations
-
-Convert talking scripts to audio files using Google's TTS service:
-
-```bash
-# Generate audio for single presentation
-python -m src.main generate-audio presentation.json
-
-# Generate audio for multiple presentations
-python -m src.main generate-audio presentation1.json presentation2.json
-
-# Generate with custom output directory
-python -m src.main generate-audio presentation.json --output-dir ./audio_files
-
-# Generate with verbose output
-python -m src.main generate-audio presentation.json --verbose
-```
-
-**Requirements for TTS:**
-- Google API key (GEMINI_API_KEY or GOOGLE_API_KEY in .env)
-- The command creates an `audio/` subdirectory with WAV files
-- Updates the JSON file with audio paths for each slide
-- Generates a new file with `_with_audio.json` suffix
 
 ## 🔧 Setting Up Ollama (Local AI)
 
-1. **Install Ollama**
-   ```bash
-   # macOS
-   brew install ollama
-   
-   # Linux
-   curl -fsSL https://ollama.ai/install.sh | sh
-   
-   # Windows: Download from https://ollama.ai
-   ```
+For local, privacy-focused AI:
 
-2. **Pull a model**
-   ```bash
-   ollama pull llama3.2
-   # or try: mistral, codellama, phi3
-   ```
+1. **Install Ollama**: Download from https://ollama.ai
+2. **Pull a model**: `ollama pull llama3.2`
+3. **Start service**: `ollama serve`
+4. **Configure**: Set `LLM_PROVIDER=ollama` in environment
 
-3. **Start Ollama service**
-   ```bash
-   ollama serve
-   ```
-
-4. **Configure environment**
-   ```env
-   LLM_PROVIDER=ollama
-   LLM_MODEL=llama3.2
-   LLM_BASE_URL=http://localhost:11434
-   ```
-
-## 📁 Project Structure
+## 📁 Library Structure
 
 ```
-├── src/
-│   ├── core/                    # Core business logic
-│   │   ├── content_generator.py # Main generation orchestrator
-│   │   ├── input_handler.py     # Input validation and sanitization
-│   │   └── json_serializer.py   # JSON output handling
-│   ├── integrations/            # LLM provider integrations
-│   │   ├── llm_client.py        # Unified LLM client (all providers)
-│   │   └── langchain_integration.py # Legacy compatibility
-│   ├── prompts/                 # AI prompts and templates
-│   ├── utils/                   # Utilities and configuration
-│   └── main.py                  # CLI interface
-├── tests/                       # Test suite
-├── docs/                        # Documentation
-├── .env.example                 # Environment template
-├── requirements.txt             # Python dependencies
-└── README.md                    # This file
+presentation_generator/
+├── __init__.py              # Public API exports
+├── core/
+│   ├── generator.py         # Main orchestrator class
+│   ├── content.py          # Content generation logic
+│   └── workflow.py         # Workflow management
+├── providers/               # LLM provider implementations
+├── media/                   # Image, audio, video processing
+├── models/                  # Data models and types
+└── utils/                   # Configuration and utilities
 ```
 
 ## 🧪 Testing
 
 ```bash
 # Run the test suite
-python test_providers.py
+pytest
 
-# Test specific provider
-python -m src.main test-providers
-
-# Generate a test presentation
-python -m src.main generate "Test Topic" --verbose
+# Run with coverage
+pytest --cov=presentation_generator
 ```
 
-## 📊 Output Format
+## 📊 Output Structure
 
-Generated presentations are saved as JSON files with the following structure:
+The library returns a `Presentation` object with complete video and individual assets:
 
-```json
-{
-  "main_subject": "Your Topic",
-  "created_at": "2024-01-01T12:00:00",
-  "metadata": {
-    "total_slides": 5,
-    "generation_time": 45.2,
-    "llm_provider": "gemini",
-    "llm_model": "gemini-2.5-flash"
-  },
-  "slides": [
-    {
-      "slide_number": 1,
-      "sub_subject": "Introduction",
-      "slide_text": "• Key points for the slide...",
-      "talking_script": "Welcome to this presentation about..."
-    }
-  ]
-}
+```python
+@dataclass
+class Presentation:
+    topic: str
+    slides: List[Slide]
+    video_path: str              # Main output - complete video
+    created_at: datetime
+
+@dataclass  
+class Slide:
+    title: str
+    content: str
+    script: str
+    image_path: str              # Generated slide image
+    audio_path: str              # Generated narration audio
+    duration: float              # Auto-calculated from audio
 ```
 
 ## 🔍 Troubleshooting
@@ -259,32 +175,15 @@ Generated presentations are saved as JSON files with the following structure:
 ### Common Issues
 
 **"Provider not supported" Error**
-- Ensure `LLM_PROVIDER` is one of: `gemini`, `ollama`, `openai`, `anthropic`
+- Ensure `llm_provider` is one of: `gemini`, `ollama`, `openai`, `anthropic`
 
 **"API key required" Error**
-- Set `LLM_API_KEY` for cloud providers
+- Set API key in Config object or environment variables
 - Ollama doesn't require an API key
 
 **"Connection failed" Error**
 - For Ollama: Ensure service is running (`ollama serve`)
 - For cloud providers: Check API key and internet connection
-
-**"Model not found" Error**
-- For Ollama: Pull the model first (`ollama pull model-name`)
-- For cloud providers: Verify model name is correct
-
-### Getting Help
-
-```bash
-# Show usage examples
-python -m src.main examples
-
-# Get provider-specific setup help
-python -m src.main setup --provider <provider-name>
-
-# Check configuration
-python -m src.main config
-```
 
 ## 🤝 Contributing
 
