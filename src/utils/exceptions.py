@@ -101,6 +101,17 @@ class RetryExhaustedError(PresentationGeneratorError):
         )
 
 
+class TTSGenerationError(PresentationGeneratorError):
+    """Raised when text-to-speech generation fails."""
+    
+    def __init__(self, message: str, text_input: Optional[str] = None):
+        super().__init__(
+            message=message,
+            error_code="TTS_GENERATION_ERROR",
+            details={"text_input": text_input}
+        )
+
+
 def categorize_error(error: Exception) -> str:
     """Categorize an error for logging and handling purposes.
     

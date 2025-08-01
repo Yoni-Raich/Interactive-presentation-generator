@@ -98,9 +98,12 @@ def cli(ctx, version):
               help='Output file path (default: auto-generated in output directory)')
 @click.option('--verbose', '-v', is_flag=True, 
               help='Enable verbose output with detailed progress')
+@click.option('--config', 'config_path',
+              type=click.Path(exists=True),
+              help='Path to a custom YAML configuration file.')
 @click.option('--config-check', is_flag=True,
               help='Check configuration and exit')
-def generate(subject: Optional[str], output: Optional[str], verbose: bool, config_check: bool):
+def generate(subject: Optional[str], output: Optional[str], verbose: bool, config_path: Optional[str], config_check: bool):
     """
     Generate a presentation from a subject.
     
@@ -117,16 +120,21 @@ def generate(subject: Optional[str], output: Optional[str], verbose: bool, confi
         # Generate with custom output file
         python -m src.main generate "AI Ethics" --output my_presentation.json
         
+        # Generate with custom config file
+        python -m src.main generate "Climate Change" --config my_config.yaml
+
         # Generate with verbose progress
         python -m src.main generate "Climate Change" --verbose
     """
     try:
         # Load and validate configuration
         click.echo("🔧 Loading configuration...")
-        config = load_config()
+        config = load_config(config_path)
         
         if config_check:
             click.echo("✅ Configuration is valid!")
+            if config.config_file:
+                click.echo(f"   Config file: {config.config_file}")
             click.echo(f"   Provider: {config.llm_provider}")
             click.echo(f"   Model: {config.llm_model}")
             click.echo(f"   Output directory: {config.output_directory}")
@@ -305,12 +313,20 @@ def view(file_path: str, output_format: str):
 
 
 @cli.command()
-def config():
+@click.option('--config', 'config_path',
+              type=click.Path(exists=True),
+              help='Path to a custom YAML configuration file.')
+def config(config_path: Optional[str]):
     """Show current configuration and environment setup."""
     try:
-        config = load_config()
+        config = load_config(config_path)
         
         click.echo("🔧 Current Configuration:")
+        if config.config_file:
+            click.echo(f"   Config file: {config.config_file}")
+        else:
+            click.echo("   Config file: Not used (defaults and env vars only)")
+
         click.echo(f"   Provider: {config.llm_provider}")
         click.echo(f"   Model: {config.llm_model}")
         click.echo(f"   Temperature: {config.llm_temperature}")
@@ -371,6 +387,12 @@ def examples():
     click.echo("👀 Viewing Presentations:")
     click.echo("   python -m src.main view presentation.json")
     click.echo("   python -m src.main view presentation.json --format detailed")
+    click.echo()
+    
+    click.echo("🎵 Generating Audio:")
+    click.echo("   python -m src.main generate-audio presentation.json")
+    click.echo("   python -m src.main generate-audio presentation1.json presentation2.json")
+    click.echo("   python -m src.main generate-audio presentation.json --output-dir ./audio")
     click.echo()
     
     click.echo("🔧 Configuration:")
@@ -503,6 +525,119 @@ def setup(provider: Optional[str], list_providers: bool):
     click.echo()
     click.echo("🚀 Generate your first presentation:")
     click.echo("   python -m src.main generate \"Your Topic Here\"")
+
+
+@cli.command()
+@click.argument('json_files', nargs=-1, required=True, type=click.Path(exists=True))
+@click.option('--output-dir', '-o',
+              help='Directory to save audio files (default: same as JSON file)')
+@click.option('--verbose', '-v', is_flag=True,
+              help='Enable verbose output')
+def generate_audio(json_files: tuple, output_dir: Optional[str], verbose: bool):
+    """
+    Generate audio files from presentation JSON talking scripts.
+    
+    JSON_FILES: One or more paths to presentation JSON files
+    
+    This command processes presentation JSON files and generates audio files
+    for all talking scripts using Google's TTS service.
+    
+    Examples:
+    
+        # Generate audio for single presentation
+        python -m src.main generate-audio presentation.json
+        
+        # Generate audio for multiple presentations
+        python -m src.main generate-audio presentation1.json presentation2.json
+        
+        # Generate audio with custom output directory
+        python -m src.main generate-audio presentation.json --output-dir ./audio_files
+        
+        # Generate with verbose output
+        python -m src.main generate-audio presentation.json --verbose
+    """
+    try:
+        from src.integrations.tts_client import TTSClient
+        from src.utils.exceptions import TTSGenerationError
+        
+        click.echo("🎵 Initializing TTS client...")
+        tts_client = TTSClient()
+        
+        if len(json_files) == 1:
+            # Single file processing
+            json_file = json_files[0]
+            click.echo(f"📄 Processing presentation: {json_file}")
+            
+            if verbose:
+                click.echo("🔍 Reading JSON file...")
+            
+            # Process the JSON file
+            updated_json_path = tts_client.process_presentation_json(json_file, output_dir)
+            
+            click.echo("✅ Audio generation completed!")
+            click.echo(f"📁 Updated presentation saved to: {updated_json_path}")
+            
+            # Show summary
+            import json
+            with open(updated_json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            audio_count = sum(1 for slide in data['slides'] if 'audio_path' in slide)
+            total_slides = len(data['slides'])
+            
+            click.echo(f"🎯 Generated audio for {audio_count}/{total_slides} slides")
+            
+            if verbose and audio_count > 0:
+                click.echo("\n🎵 Generated audio files:")
+                for i, slide in enumerate(data['slides'], 1):
+                    if 'audio_path' in slide:
+                        click.echo(f"   {i}. {slide['sub_subject']}: {slide['audio_path']}")
+        
+        else:
+            # Multiple files processing
+            click.echo(f"📄 Processing {len(json_files)} presentations...")
+            
+            updated_files = tts_client.process_multiple_presentations(list(json_files), output_dir)
+            
+            click.echo("✅ Audio generation completed!")
+            click.echo(f"📁 Successfully processed {len(updated_files)}/{len(json_files)} files")
+            
+            if verbose:
+                click.echo("\n📋 Processed files:")
+                for updated_file in updated_files:
+                    click.echo(f"   ✅ {updated_file}")
+            
+            # Show total summary
+            total_audio_count = 0
+            total_slides = 0
+            
+            import json
+            for updated_file in updated_files:
+                try:
+                    with open(updated_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    audio_count = sum(1 for slide in data['slides'] if 'audio_path' in slide)
+                    total_audio_count += audio_count
+                    total_slides += len(data['slides'])
+                except:
+                    continue
+            
+            click.echo(f"🎯 Generated audio for {total_audio_count}/{total_slides} total slides")
+        
+    except TTSGenerationError as e:
+        click.echo(f"\n❌ TTS Error: {e}", err=True)
+        if "API_KEY" in str(e):
+            click.echo("\n💡 Please ensure GEMINI_API_KEY or GOOGLE_API_KEY is set in your .env file.", err=True)
+        sys.exit(1)
+        
+    except Exception as e:
+        click.echo(f"\n❌ Unexpected Error: {e}", err=True)
+        if verbose:
+            import traceback
+            click.echo("\n🔍 Full traceback:", err=True)
+            click.echo(traceback.format_exc(), err=True)
+        sys.exit(1)
 
 
 @cli.command()
