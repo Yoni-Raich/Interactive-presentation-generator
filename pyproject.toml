@@ -32,7 +32,6 @@ dependencies = [
     "langchain-google-genai>=1.0.0",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
-    "click>=8.0.0",
 ]
 
 [project.optional-dependencies]
@@ -45,8 +44,7 @@ dev = [
     "mypy>=1.0.0",
 ]
 
-[project.scripts]
-presentation-generator = "src.main:main"
+
 
 [project.urls]
 Homepage = "https://github.com/your-org/presentation-generator"

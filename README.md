@@ -201,7 +201,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with [LangChain](https://langchain.com/) for LLM integration
 - Supports [Ollama](https://ollama.ai/) for local AI models
-- CLI powered by [Click](https://click.palletsprojects.com/)
 - Thanks to all the open-source AI model providers
 
 ## 📚 Additional Resources
