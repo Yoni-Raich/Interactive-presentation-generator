@@ -1,0 +1,38 @@
+# Ollama Configuration for Presentation Generator
+# This configuration is optimized for local Ollama deployment
+
+# LLM Provider Configuration
+llm_provider: "ollama"
+api_key: null  # Not required for Ollama
+model: "llama3.2"  # Popular Ollama model, change to your preferred model
+base_url: "http://localhost:11434"  # Default Ollama server URL
+temperature: 0.7
+max_tokens: 2048
+timeout: 60.0  # Increased timeout for local processing
+max_retries: 3
+organization: null  # Not applicable for Ollama
+
+# Output Configuration
+output_dir: "./output"
+include_audio: true
+include_video: true
+slide_count: 20  # Auto-determine based on content
+temp_cleanup: true
+
+# Media Processing Settings
+image_width: 1920
+image_height: 1080
+audio_format: "wav"
+video_fps: 30
+
+# Generation Parameters (if using structured config)
+generation:
+  max_sub_subjects: 8
+  min_sub_subjects: 3
+  slide_text_max_length: 500
+  script_min_length: 200
+
+# Retry and Rate Limiting
+retry:
+  max_retries: 3
+  rate_limit_delay: 1.0  # Less aggressive for local processing

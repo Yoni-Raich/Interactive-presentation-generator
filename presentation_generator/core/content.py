@@ -20,6 +20,7 @@ from ..utils.exceptions import (
     ValidationError,
     WorkflowError
 )
+from ..src.prompts.content_generation import ContentPrompts
 
 
 @dataclass
@@ -194,16 +195,12 @@ class ContentGenerator:
         min_slides = max(3, target_count - 2)
         max_slides = min(10, target_count + 2)
         
-        prompt = f"""Generate {target_count} slide topics for a presentation about "{main_topic}".
-
-Requirements:
-- Create {min_slides}-{max_slides} distinct topics
-- Each topic should be clear and specific (2-8 words)
-- Topics should flow logically for a presentation
-- Cover the most important aspects of {main_topic}
-- Ensure topics are suitable for individual slides
-
-Format as a numbered list, one topic per line."""
+        prompt = ContentPrompts.slide_topics_generation(
+            main_topic=main_topic,
+            target_count=target_count,
+            min_slides=min_slides,
+            max_slides=max_slides
+        )
         
         try:
             response = self._make_api_call_with_retry(prompt, "slide_topic_generation")
@@ -337,20 +334,12 @@ Format as a numbered list, one topic per line."""
         main_topic = context["main_topic"]
         total_slides = context["total_slides"]
         
-        prompt = f"""Create slide content for: "{topic}"
-
-Context:
-- Part of presentation about "{main_topic}"
-- Slide {slide_number} of {total_slides}
-
-Requirements:
-- Keep content concise and visual-friendly
-- Use bullet points or short paragraphs
-- Focus on key points for this specific topic
-- Make it engaging and informative
-- Suitable for display on a slide
-
-Generate only the slide content."""
+        prompt = ContentPrompts.slide_content_generation(
+            topic=topic,
+            main_topic=main_topic,
+            slide_number=slide_number,
+            total_slides=total_slides
+        )
         
         content = self._make_api_call_with_retry(prompt, "slide_content_generation")
         
@@ -382,32 +371,14 @@ Generate only the slide content."""
         # Determine context for transitions
         previous_topic = generated_topics[-1] if generated_topics else None
         
-        position_context = ""
-        if slide_number == 1:
-            position_context = "This is the opening slide of the presentation."
-        elif slide_number == total_slides:
-            position_context = "This is the concluding slide of the presentation."
-        else:
-            position_context = f"This is slide {slide_number} of {total_slides}."
-        
-        prompt = f"""Create a narration script for this slide:
-
-Topic: {topic}
-Slide Content: {content}
-
-Context:
-- Main presentation topic: {main_topic}
-- {position_context}
-{f"- Previous topic: {previous_topic}" if previous_topic else ""}
-
-Requirements:
-- Conversational and engaging tone
-- Expand on the slide content naturally
-- Include smooth transitions where appropriate
-- Natural speaking rhythm
-- Minimum 100 words for adequate narration
-
-Generate only the narration script."""
+        prompt = ContentPrompts.slide_script_generation(
+            topic=topic,
+            content=content,
+            main_topic=main_topic,
+            slide_number=slide_number,
+            total_slides=total_slides,
+            previous_topic=previous_topic
+        )
         
         script = self._make_api_call_with_retry(prompt, "script_generation")
         
@@ -637,27 +608,16 @@ Generate only the narration script."""
         main_topic = context["main_topic"]
         total_slides = context["total_slides"]
         
-        # Create basic slide content
-        content = f"""• {topic}
-• Key aspects and concepts
-• Important principles
-• Practical applications
-• Relevance to {main_topic}"""
+        # Create basic slide content using template
+        content = ContentPrompts.fallback_content_template(topic, main_topic)
         
-        # Create basic script
-        position_text = ""
-        if slide_number == 1:
-            position_text = "Let's begin by exploring "
-        elif slide_number == total_slides:
-            position_text = "To conclude, let's examine "
-        else:
-            position_text = "Next, let's discuss "
-        
-        script = f"""{position_text}{topic}. This is an important aspect of {main_topic} that we need to understand.
-
-When we consider {topic}, we should focus on the key concepts and principles that make it significant. This topic encompasses several important elements that contribute to our overall understanding of {main_topic}.
-
-The practical applications and real-world relevance of {topic} help us appreciate its importance in the broader context of our discussion. Understanding these aspects will enhance our comprehension of {main_topic} and its implications."""
+        # Create basic script using template
+        script = ContentPrompts.fallback_script_template(
+            topic=topic,
+            main_topic=main_topic,
+            slide_number=slide_number,
+            total_slides=total_slides
+        )
         
         return Slide(
             title=topic,

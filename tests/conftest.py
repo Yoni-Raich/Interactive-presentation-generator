@@ -1,8 +1,8 @@
 """
-Pytest configuration and fixtures for slide-to-image-converter tests.
+Pytest configuration and fixtures for presentation-generator tests.
 
 This module provides common test fixtures, configuration, and utilities
-for all test modules in the slide-to-image-converter test suite.
+for all test modules in the presentation-generator test suite.
 """
 
 import pytest
@@ -11,9 +11,10 @@ import shutil
 from pathlib import Path
 import json
 import sys
+from unittest.mock import Mock
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add presentation_generator to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 @pytest.fixture
@@ -515,6 +516,56 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(pytest.mark.slow)
 
 
+@pytest.fixture
+def mock_config():
+    """Provide a mock configuration for testing."""
+    config = Mock()
+    config.slide_count = 5
+    config.max_retries = 3
+    config.retry_delay = 0.1
+    config.output_dir = "/tmp/test_output"
+    config.llm_provider = "gemini"
+    config.api_key = "test-api-key"
+    config.model = "test-model"
+    return config
+
+
+@pytest.fixture
+def sample_slide():
+    """Provide a sample slide for testing."""
+    from presentation_generator.models.data import Slide
+    
+    return Slide(
+        title="Sample Test Slide",
+        content="# Sample Slide\n\nThis is **sample content** for testing purposes.",
+        script="This is a sample narration script for testing the slide functionality."
+    )
+
+
+@pytest.fixture
+def sample_presentation():
+    """Provide a sample presentation for testing."""
+    from presentation_generator.models.data import Slide, Presentation
+    
+    slides = [
+        Slide(
+            title=f"Slide {i}",
+            content=f"# Slide {i}\n\nContent for slide {i}",
+            script=f"Narration script for slide {i}",
+            image_path=f"/path/to/slide_{i}.png",
+            audio_path=f"/path/to/audio_{i}.wav",
+            duration=5.0 + i
+        )
+        for i in range(1, 4)
+    ]
+    
+    return Presentation(
+        topic="Sample Test Presentation",
+        slides=slides,
+        metadata={"test": True}
+    )
+
+
 @pytest.fixture(autouse=True)
 def cleanup_global_state():
     """Clean up global state between tests."""
@@ -522,16 +573,9 @@ def cleanup_global_state():
     
     # Clean up any global caches or state
     try:
-        from slide_to_image_converter.markdown_converter import MarkdownConverter
-        MarkdownConverter.clear_template_cache()
+        from presentation_generator.providers.base import ProviderFactory
+        ProviderFactory.clear_cache()
     except ImportError:
-        pass
-    
-    try:
-        from slide_to_image_converter.html_renderer import HTMLRenderer
-        import asyncio
-        asyncio.run(HTMLRenderer.cleanup_browser_pool())
-    except (ImportError, RuntimeError):
         pass
 
 
@@ -543,3 +587,12 @@ def pytest_runtest_setup(item):
             import playwright
         except ImportError:
             pytest.skip("Playwright not available for integration tests")
+    
+    # Skip media tests if external dependencies are not available
+    if "media" in item.keywords or "test_media" in item.nodeid:
+        try:
+            import playwright
+            from google.cloud import texttospeech
+            import ffmpeg
+        except ImportError as e:
+            pytest.skip(f"Media processing dependencies not available: {e}")

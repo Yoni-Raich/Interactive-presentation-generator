@@ -482,10 +482,14 @@ def load_config(
     Load configuration from multiple sources with proper precedence.
     
     Configuration sources in order of precedence (highest to lowest):
-    1. override_dict parameter
-    2. Environment variables
-    3. Configuration file (if specified or config.yaml exists)
-    4. Default values
+    1. override_dict parameter (always applied)
+    2. Explicit configuration file (if config_path provided)
+    3. Environment variables (only if no explicit config file)
+    4. Default config.yaml (only if exists and no explicit config)
+    5. Default values
+    
+    This ensures that when a user provides an explicit config file,
+    environment variables won't override their settings.
     
     Args:
         config_path: Optional path to YAML configuration file
@@ -502,23 +506,30 @@ def load_config(
     config = Config()
     config._config_sources.append("defaults")
     
-    # Load from file if specified or if config.yaml exists
+    # Track if user explicitly provided a config file
+    user_provided_config = False
+    
+    # Load from explicitly specified config file (highest priority)
     if config_path:
         if Path(config_path).exists():
             file_config = Config.from_yaml(config_path)
             config = config.merge_with(file_config)
+            user_provided_config = True
         else:
             raise ConfigurationError(f"Specified configuration file not found: {config_path}")
-    elif Path("config.yaml").exists():
+    
+    # If no explicit config provided, check environment variables first
+    if not user_provided_config:
+        env_config = Config.from_env(env_prefix)
+        if env_config._config_sources:  # Only merge if env vars were found
+            config = config.merge_with(env_config)
+    
+    # Then check for default config.yaml (lowest priority among file sources)
+    if not user_provided_config and Path("config.yaml").exists():
         file_config = Config.from_yaml("config.yaml")
         config = config.merge_with(file_config)
     
-    # Override with environment variables
-    env_config = Config.from_env(env_prefix)
-    if env_config._config_sources:  # Only merge if env vars were found
-        config = config.merge_with(env_config)
-    
-    # Apply direct overrides
+    # Apply direct overrides (always highest priority)
     if override_dict:
         override_config = Config.from_dict(override_dict)
         override_config._config_sources.append("overrides")

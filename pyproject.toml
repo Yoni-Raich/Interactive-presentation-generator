@@ -8,7 +8,7 @@ version = "0.1.0"
 authors = [
     {name = "Presentation Generator Team", email = "team@presentationgenerator.com"},
 ]
-description = "AI-powered presentation generator using LangChain and Gemini"
+description = "Python library for AI-powered presentation generation with complete video workflow"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
@@ -30,8 +30,15 @@ classifiers = [
 dependencies = [
     "langchain>=0.1.0",
     "langchain-google-genai>=1.0.0",
+    "langchain-community>=0.0.20",
+    "langchain-openai>=0.0.5",
+    "langchain_ollama",
+    "langchain-anthropic>=0.1.0",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "google-genai",
+    "requests>=2.25.0",
 ]
 
 [project.optional-dependencies]
@@ -53,7 +60,7 @@ Issues = "https://github.com/your-org/presentation-generator/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
+include = ["presentation_generator*"]
 
 [tool.black]
 line-length = 88
@@ -101,13 +108,13 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--verbose",
-    "--cov=src",
+    "--cov=presentation_generator",
     "--cov-report=term-missing",
     "--cov-report=html",
 ]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["presentation_generator"]
 omit = [
     "*/tests/*",
     "*/test_*",

@@ -11,7 +11,7 @@ def read_readme():
     if os.path.exists(readme_path):
         with open(readme_path, 'r', encoding='utf-8') as f:
             return f.read()
-    return "Interactive Presentation Generator using LangChain and Gemini AI"
+    return "Python library for AI-powered presentation generation with complete video workflow"
 
 # Read requirements from requirements.txt
 def read_requirements():
@@ -26,11 +26,11 @@ setup(
     version="0.1.0",
     author="Presentation Generator Team",
     author_email="team@presentationgenerator.com",
-    description="AI-powered presentation generator using LangChain and Gemini",
+    description="Python library for AI-powered presentation generation with complete video workflow",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
     url="https://github.com/your-org/presentation-generator",
-    packages=find_packages(),
+    packages=find_packages(include=['presentation_generator', 'presentation_generator.*']),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -58,11 +58,7 @@ setup(
             "mypy>=1.0.0",
         ]
     },
-    entry_points={
-        "console_scripts": [
-            "presentation-generator=src.main:main",
-        ],
-    },
+
     include_package_data=True,
     zip_safe=False,
 )
